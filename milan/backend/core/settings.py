@@ -15,7 +15,7 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
-    default='https://feedbackmangement.onrender.com',
+    default='feedbackmangement.onrender.com',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
@@ -151,7 +151,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default="http://localhost:3000,https://feedback-mangement.vercel.app",
+    default="http://localhost:3000, https://feedback-mangement.vercel.app",
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
