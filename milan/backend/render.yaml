@@ -2,7 +2,9 @@ services:
   - type: web
     name: milan-backend
     env: python
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    plan: free
+    rootDir: milan/backend
+    buildCommand: ./build.sh
     startCommand: daphne -b 0.0.0.0 -p $PORT core.asgi:application
     envVars:
       - key: PYTHON_VERSION
@@ -15,12 +17,12 @@ services:
         value: "*"
       - key: DATABASE_URL
         fromDatabase:
-          name: milan-postgres
+          name: feedback_grk6
           property: connectionString
-  
+
   - type: pserv
-    name: milan-postgres
+    name: feedback_grk6
     env: postgresql
     plan: free
-    databaseName: milan_db
-    databaseUser: milan_user
+    databaseName: feedback_grk6
+    databaseUser: feedback_user
