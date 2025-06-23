@@ -19,7 +19,7 @@ export const useSSE = (onEvent) => {
     if (!token) return
 
     // Convert HTTP URL to WebSocket URL
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api"
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "https://loginfeedbackmangement.onrender.com/api"
     const wsBaseUrl = apiBaseUrl.replace(/^https?:\/\//, '').replace('/api', '')
     const protocol = apiBaseUrl.startsWith('https') ? 'wss' : 'ws'
     const url = `${protocol}://${wsBaseUrl}/ws/sse/${user.id}/?token=${encodeURIComponent(token)}`
