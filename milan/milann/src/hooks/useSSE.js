@@ -19,10 +19,13 @@ export const useSSE = (onEvent) => {
     if (!token) return
 
     // Use WebSocket for real-time communication
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:"
-    const wsHost = window.location.hostname
-    const wsPort = window.location.hostname === "localhost" ? ":8001" : ""
-    const wsUrl = `${wsProtocol}//${wsHost}${wsPort}/ws/sse/${user.id}/?token=${token}`
+    const wsHost =
+      window.location.hostname === "localhost"
+        ? "localhost"
+        : "feedbackmangement.onrender.com";
+    const wsPort = window.location.hostname === "localhost" ? ":8001" : "";
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${wsProtocol}//${wsHost}${wsPort}/ws/sse/${user.id}/?token=${token}`;
 
     try {
       const websocket = new WebSocket(wsUrl)
