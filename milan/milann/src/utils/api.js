@@ -2,8 +2,8 @@ import axios from "axios"
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: "https://feedbackmangement.onrender.com/api",
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://feedbackmangement.onrender.com/api",
+  timeout: 100000000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -36,7 +36,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken")
         if (refreshToken) {
           const response = await axios.post(
-            `${"https://feedbackmangement.onrender.com/api"}/token/refresh/`,
+            `${import.meta.env.VITE_API_BASE_URL || "https://feedbackmangement.onrender.com/api"}/token/refresh/`,
             { refresh: refreshToken },
           )
 

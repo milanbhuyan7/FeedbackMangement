@@ -18,7 +18,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   // Get app name from environment
-  const appName = import.meta.env.VITE_APP_NAME || "Feedback Tool"
+  const appName =  "Feedback Tool"
 
   // Redirect if already logged in
   if (user) {
