@@ -18,15 +18,14 @@ export const useSSE = (onEvent) => {
     const token = localStorage.getItem("token")
     if (!token) return
 
-    // Convert HTTP URL to WebSocket URL
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "https://loginfeedbackmangement.onrender.com/api"
-    const wsBaseUrl = apiBaseUrl.replace(/^https?:\/\//, '').replace('/api', '')
-    const protocol = apiBaseUrl.startsWith('https') ? 'wss' : 'ws'
-    const url = `${protocol}://${wsBaseUrl}/ws/sse/${user.id}/?token=${encodeURIComponent(token)}`
+    // Use WebSocket for real-time communication
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+    const wsHost = window.location.hostname
+    const wsPort = window.location.hostname === "localhost" ? ":8001" : ""
+    const wsUrl = `${wsProtocol}//${wsHost}${wsPort}/ws/sse/${user.id}/?token=${token}`
 
     try {
-      console.log("WebSocket: Connecting to", url)
-      const websocket = new WebSocket(url)
+      const websocket = new WebSocket(wsUrl)
       websocketRef.current = websocket
 
       websocket.onopen = () => {
@@ -41,27 +40,8 @@ export const useSSE = (onEvent) => {
           const data = JSON.parse(event.data)
           console.log("WebSocket: Received message:", data)
 
-          // Handle different message types
-          if (data.type) {
-            // Handle typed messages (new_feedback, feedback_updated, etc.)
-            if (onEvent) {
-              onEvent(data)
-            }
-          } else if (data.event) {
-            // Handle event-based messages
-            const eventData = {
-              type: data.event,
-              data: data.data || data
-            }
-            console.log(`WebSocket: ${data.event} received:`, eventData)
-            if (onEvent) {
-              onEvent(eventData)
-            }
-          } else {
-            // Handle generic messages
-            if (onEvent) {
-              onEvent(data)
-            }
+          if (onEvent && data.type !== "heartbeat" && data.type !== "connected") {
+            onEvent({ type: data.type, data: data.data || data })
           }
         } catch (err) {
           console.error("WebSocket: Error parsing message:", err)
@@ -73,18 +53,17 @@ export const useSSE = (onEvent) => {
         setIsConnected(false)
         websocketRef.current = null
 
-        // Only attempt reconnect if it wasn't a clean close
         if (event.code !== 1000) {
+          // Not a normal closure, attempt to reconnect
           attemptReconnect()
         }
       }
 
-      websocket.onerror = (event) => {
-        console.error("WebSocket: Connection error:", event)
+      websocket.onerror = (error) => {
+        console.error("WebSocket: Connection error:", error)
         setIsConnected(false)
         setError("WebSocket connection error")
       }
-
     } catch (err) {
       console.error("WebSocket: Failed to create connection:", err)
       setError(err.message)
@@ -94,7 +73,7 @@ export const useSSE = (onEvent) => {
 
   const disconnect = () => {
     if (websocketRef.current) {
-      websocketRef.current.close(1000, "Client disconnect")
+      websocketRef.current.close(1000, "Normal closure")
       websocketRef.current = null
     }
 
@@ -114,7 +93,7 @@ export const useSSE = (onEvent) => {
       return
     }
 
-    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000) // Exponential backoff, max 30s
+    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000)
     console.log(`WebSocket: Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts.current + 1})`)
 
     reconnectTimeoutRef.current = setTimeout(() => {
@@ -122,14 +101,6 @@ export const useSSE = (onEvent) => {
       disconnect()
       connect()
     }, delay)
-  }
-
-  const sendMessage = (message) => {
-    if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-      websocketRef.current.send(JSON.stringify(message))
-    } else {
-      console.warn("WebSocket: Cannot send message, connection not open")
-    }
   }
 
   useEffect(() => {
@@ -142,7 +113,6 @@ export const useSSE = (onEvent) => {
     }
   }, [user])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnect()
@@ -152,7 +122,6 @@ export const useSSE = (onEvent) => {
   return {
     isConnected,
     error,
-    sendMessage,
     reconnect: () => {
       disconnect()
       setTimeout(connect, 1000)

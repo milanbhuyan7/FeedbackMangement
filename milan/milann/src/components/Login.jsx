@@ -12,7 +12,7 @@ import { User, Lock, LogIn } from "lucide-react"
 
 const Login = () => {
   const { login, user, loading } = useAuth()
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +42,7 @@ const Login = () => {
     setIsLoading(true)
     setError("")
 
-    const result = await login(username, password)
+    const result = await login(email, password)
 
     if (!result.success) {
       setError(result.error)
@@ -67,15 +67,15 @@ const Login = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
                   required
                   disabled={isLoading}

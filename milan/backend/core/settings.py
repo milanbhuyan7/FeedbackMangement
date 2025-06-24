@@ -6,38 +6,39 @@ import dj_database_url
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 # Security
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-default-key')
-DEBUG = config('DEBUG', default=False, cast=bool)
+SECRET_KEY = config('SECRET_KEY', cast=str)  # No default for security
 
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='feedbackmangement.onrender.com',
-    cast=lambda v: [s.strip() for s in v.split(',')]
-)
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-# Applications
+ALLOWED_HOSTS = [
+    'feedbackmangement.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
+
+# Application definition
 INSTALLED_APPS = [
-    'daphne',
+    'daphne',  # Add daphne at the top
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'channels',
+    'channels',  # Add channels
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'feedback',
 ]
 
-# Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -67,38 +68,50 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 ASGI_APPLICATION = 'core.asgi.application'
 
-# Database
-DATABASE_URL = config('DATABASE_URL', default=None)
+# Database Configuration
+DATABASE_URL = config(
+    'DATABASE_URL', 
+    default='postgresql://feedback_user:2YUjcbWrq9FmaPuSRCIQyqtilLxDAQvA@dpg-d1chjrndiees73c4pt50-a.oregon-postgres.render.com/feedback_grk6'
+)
 
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
-    }
-else:
+DATABASES = {
+    'default': dj_database_url.parse(DATABASE_URL)
+}
+
+# Fallback to individual database settings if DATABASE_URL parsing fails
+if not DATABASES['default']:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='feedback_db'),
-            'USER': config('DB_USER', default='postgres'),
-            'PASSWORD': config('DB_PASSWORD', default='postgres'),
-            'HOST': config('DB_HOST', default='localhost'),
+            'NAME': config('DB_NAME', default='feedback_grk6'),
+            'USER': config('DB_USER', default='feedback_user'),
+            'PASSWORD': config('DB_PASSWORD', default='2YUjcbWrq9FmaPuSRCIQyqtilLxDAQvA'),
+            'HOST': config('DB_HOST', default='dpg-d1chjrndiees73c4pt50-a.oregon-postgres.render.com'),
             'PORT': config('DB_PORT', default='5432'),
         }
     }
 
-# Channels (in-memory for now)
+# Channels Configuration - Using In-Memory Channel Layer
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
-# Auth Password Validation
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
 # Internationalization
@@ -107,18 +120,23 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Default primary key
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Custom user model
+# Custom User Model
 AUTH_USER_MODEL = 'feedback.User'
 
-# REST Framework
+# Authentication Configuration - Use email as username
+AUTHENTICATION_BACKENDS = [
+    'feedback.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -130,7 +148,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-# JWT settings
+# JWT Configuration
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -139,25 +157,15 @@ SIMPLE_JWT = {
 }
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,https://feedback-mangement.vercel.app',
-    cast=lambda v: [s.strip() for s in v.split(',')]
-)
-
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-
-# Allow all methods for API endpoints
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+CORS_ALLOWED_ORIGINS = [
+    "https://feedback-mangement.vercel.app",
+    "https://feedbackmangement.onrender.com",
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only for development
+
+# Additional CORS headers for WebSocket
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -171,21 +179,20 @@ CORS_ALLOW_HEADERS = [
     'cache-control',
 ]
 
-# Additional CORS settings for production
-CORS_PREFLIGHT_MAX_AGE = 86400
-CORS_EXPOSE_HEADERS = [
-    'content-type',
-    'x-csrftoken',
-]
+# SSE Configuration
+SSE_HEARTBEAT_INTERVAL = 30  # seconds
 
-# Security settings for production
+# Email Configuration (for future use)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@feedbacktool.com'
+
+# Security Settings for Production
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_REDIRECT_EXEMPT = []
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-
-# SSE
-SSE_HEARTBEAT_INTERVAL = 30

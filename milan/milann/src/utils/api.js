@@ -2,7 +2,7 @@ import axios from "axios"
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "https://loginfeedbackmangement.onrender.com/api",
+  baseURL: "https://feedbackmangement.onrender.com/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -36,7 +36,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem("refreshToken")
         if (refreshToken) {
           const response = await axios.post(
-            `${import.meta.env.VITE_API_BASE_URL || "https://loginfeedbackmangement.onrender.com/api"}/token/refresh/`,
+            `${"https://feedbackmangement.onrender.com/api"}/token/refresh/`,
             { refresh: refreshToken },
           )
 

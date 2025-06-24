@@ -38,10 +38,10 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const login = async (username, password) => {
+  const login = async (email, password) => {
     try {
       const response = await api.post("/token/", {
-        username,
+        username: email, // Send email as username
         password,
       })
 
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.detail || "Login failed",
+        error: error.response?.data?.detail || "Login failed. Please check your email and password.",
       }
     }
   }
